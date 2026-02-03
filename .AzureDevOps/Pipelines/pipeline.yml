@@ -1,0 +1,101 @@
+trigger: none
+# Optional schedule for daily or weekly scans
+schedules:
+  - cron: "0 2 * * *"  # Every day at 2 AM UTC
+    displayName: Daily RBAC Scan
+    branches:
+      include:
+        - main
+    always: true
+
+variables:
+  - group: 'CleanupRBAC'  
+
+stages:
+- stage: Scan
+  displayName: "Scan for Unknown RBAC Assignments"
+  jobs:
+  - job: ScanUnknownRBAC
+    displayName: "Run CleanUp-RBAC.ps1"
+    timeoutInMinutes: 180
+    pool:
+      name: <your-agent-pool>  # <-- your agent pool name
+
+    steps:
+    - checkout: self
+
+    - task: Bash@3
+      displayName: 'Install Azure CLI'
+      inputs:
+        targetType: 'inline'
+        script: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+    - task: Bash@3
+      displayName: 'Install PowerShell Core'
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo snap install powershell --classic
+
+    - task: AzureCLI@2
+      displayName: 'Run CleanUp-RBAC Script'
+      inputs:
+        azureSubscription: $(svc_connection)
+        scriptType: 'pscore'
+        scriptLocation: 'scriptPath'
+        scriptPath: './Scripts/CleanUp-RBAC.ps1'
+        arguments: '-OutputPath "$(Build.ArtifactStagingDirectory)/UnknownAssignments.json" -LogFilePath "$(Build.ArtifactStagingDirectory)/Logs/Cleanup.log" -MaxParallel 6'
+        
+    - task: PublishBuildArtifacts@1
+      displayName: "Publish UnknownAssignments.json"
+      inputs:
+        PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+        ArtifactName: "RBACScanOutput"
+
+- stage: ApprovalAndRemove
+  displayName: "Review and Remove Unknown Assignments"
+  dependsOn: Scan
+  
+  jobs:
+  - deployment: RemoveUnknownRBAC
+    displayName: "Remove Unknown RBAC Assignments"
+    environment: "RBAC-Cleanup-Approval"   # <-- your environment name
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+            clean: true
+
+          - download: current
+            artifact: RBACScanOutput
+
+          - task: Bash@3
+            displayName: 'Install Azure CLI'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+          - task: Bash@3
+            displayName: 'Install PowerShell Core'
+            inputs:
+              targetType: 'inline'
+              script: |
+                sudo snap install powershell --classic
+          
+          - script: |
+              az --version
+              pwsh --version
+              pwd
+            displayName: 'Verify installations'
+
+          - task: AzureCLI@2
+            displayName: 'Run Remove-unknownAssignments.ps1'
+            inputs:
+              azureSubscription: $(svc_connection)
+              scriptType: 'pscore'
+              scriptLocation: 'scriptPath'
+              scriptPath: '$(Build.SourcesDirectory)/Scripts/Remove-unknownAssignments.ps1'
+              arguments: '-InputFile "$(Pipeline.Workspace)/RBACScanOutput/UnknownAssignments.json"'
