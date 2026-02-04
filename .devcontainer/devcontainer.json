@@ -10,8 +10,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.powershell",
-        "mechatroner.rainbow-csv"
+        "ms-vscode.powershell"
       ]
     }
   }

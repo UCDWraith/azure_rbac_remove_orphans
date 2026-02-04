@@ -1,0 +1,65 @@
+{
+  "name": "Azure RBAC Cleanup – Dev Environment",
+  "description": "Local development environment for the Azure RBAC Cleanup pipeline and PowerShell tooling.",
+  "platform": "linux",
+  "baseImage": "ubuntu",
+  "executionContext": "devcontainer",
+  "entrypoint": {
+    "type": "script",
+    "path": ".devcontainer/setup.ps1",
+    "shell": "pwsh"
+  },
+  "lifecycle": {
+    "runsOn": "containerCreate",
+    "idempotent": true,
+    "safeToReRun": true
+  },
+  "tooling": {
+    "powershell": {
+      "minimumVersion": "7.2"
+    },
+    "azureCli": {
+      "required": true
+    },
+    "docker": {
+      "required": false
+    }
+  },
+  "powershellModules": [
+    {
+      "name": "Az.Accounts",
+      "purpose": "Azure authentication and context management"
+    },
+    {
+      "name": "Az.Resources",
+      "purpose": "RBAC role assignment discovery and management"
+    },
+    {
+      "name": "Microsoft.Graph.DirectoryObjects",
+      "purpose": "Validation of principals during orphaned RBAC detection"
+    },
+    {
+      "name": "Microsoft.Graph.Users",
+      "purpose": "User resolution during directory checks"
+    }
+  ],
+  "editorSupport": {
+    "vscodeExtensions": [
+      "ms-vscode.powershell"
+    ]
+  },
+  "notes": [
+    "This file documents the expected development environment only.",
+    "Azure DevOps hosted agents may already include required tooling.",
+    "Some installation steps may be skipped or unnecessary in CI/CD pipelines.",
+    "No changes are made to Azure resources during environment setup."
+  ],
+  "ownership": {
+    "maintainer": "Primary contributor",
+    "audience": [
+      "Developers",
+      "Platform engineers",
+      "Security engineers"
+    ]
+  }
+}

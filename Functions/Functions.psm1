@@ -19,6 +19,7 @@ $functionsToExport = @(
     'Initialize-PSModules',
     'Export-OrphanedAssignments',
     'Get-OrphanedAssignments',
+    'Get-ManagementGroupHierarchy',
     'Test-FederatedIdentityConnection',
     'Show-Summary',
     'Add-LogEntry'

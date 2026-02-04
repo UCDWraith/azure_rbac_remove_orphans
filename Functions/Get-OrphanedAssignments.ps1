@@ -38,7 +38,7 @@
     Version: 4.0.0
     Required PowerShell Version: 7.2+
 #>
-
+...ORIG
 function Get-OrphanedAssignments {
 
     [CmdletBinding()]
@@ -50,12 +50,16 @@ function Get-OrphanedAssignments {
         [Parameter(Mandatory = $true)]
         [string]$ScopeId,
 
+        [Parameter(Mandatory = $false)]
+        [string]$ScopeName,
+
         [switch]$IncludeResourceGroups,
 
         [string]$LogFilePath
     )
 
-    Add-LogEntry -Message "🔍 Starting orphaned RBAC assignment scan for $ScopeType '$ScopeId'..." -Level INFO -LogFilePath $LogFilePath
+    $_display = if ($ScopeName) { $ScopeName } else { $ScopeId }
+    Add-LogEntry -Message "🔍 Starting orphaned RBAC assignment scan for $ScopeType '$_display'..." -Level INFO -LogFilePath $LogFilePath
     $orphans = @()
 
     function Get-OrphanedForScope {
@@ -111,8 +115,9 @@ function Get-OrphanedAssignments {
             # ----------------- Management Group -----------------
             "ManagementGroup" {
                 $targetScope = "/providers/Microsoft.Management/managementGroups/$ScopeId"
-                Add-LogEntry -Message "📦 Scanning Management Group: $ScopeId" -Level INFO -LogFilePath $LogFilePath
-                $orphans += Get-OrphanedForScope -ScopeType "ManagementGroup" -TargetScope $targetScope -TargetName $ScopeId
+                $mgName = if ($ScopeName) { $ScopeName } else { $ScopeId }
+                Add-LogEntry -Message "📦 Scanning Management Group: $ScopeId ($mgName)" -Level INFO -LogFilePath $LogFilePath
+                $orphans += Get-OrphanedForScope -ScopeType "ManagementGroup" -TargetScope $targetScope -TargetName $mgName
             }
 
             # ----------------- Subscription -----------------
