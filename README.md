@@ -128,6 +128,7 @@ Additional notes:
 
 - The service connection also has **Reader** access in Azure.
 - The custom role can be assigned at subscription or management group scope depending on desired coverage.
+- Management group enumeration **requires** a subscription context with the `Microsoft.Management` resource provider registered (e.g., `az provider register --namespace Microsoft.Management`).
 
 ---
 

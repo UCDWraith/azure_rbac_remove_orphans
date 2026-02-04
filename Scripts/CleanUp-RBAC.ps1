@@ -12,6 +12,10 @@
     Created: 2025-10-23
     Version: 2.0.0
     Requires PowerShell 7.2+
+
+    Prerequisites:
+      - Reader (or higher) at the tenant root management group (or equivalent visibility)
+      - The 'Microsoft.Management' resource provider must be registered in the current subscription context - set the subscription context via $ValidSubscriptionId
 #>
 
 param (
