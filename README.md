@@ -19,6 +19,7 @@ The solution is designed to align with the **Microsoft Cloud Adoption Framework 
 - Avoids deletion attempts where Azure enforces guardrails on the **last Owner** or **User Access Administrator** at subscription scope
 - Designed for scheduled, repeatable execution in Azure DevOps
 - Tested on a **vanilla Ubuntu Microsoft-hosted Azure DevOps agent**
+- This repository is designed to be used as a **GitHub template**. Use the “Use this template” button to create your own copy and customise it for your environment.
 
 ### Future Enhancements
 
