@@ -130,16 +130,39 @@ $managementGroups = Get-ManagementGroupHierarchy -RootMg $rootMg -LogFilePath $L
 if (-not $managementGroups -or $managementGroups.Count -eq 0) {
     Add-LogEntry -Message "⚠️ No management groups returned from hierarchy enumeration. Check permissions at the tenant root management group." -Level WARNING -LogFilePath $LogFilePath
     $managementGroupUnknowns = @()
-} else {
+}
+else {
     Add-LogEntry -Message "✅ Management group enumeration complete. Found $($managementGroups.Count) management groups." -Level INFO -LogFilePath $LogFilePath
 
-    $managementGroupUnknowns = @()
-    foreach ($mg in $managementGroups) {
-        Add-LogEntry -Message "🔍 Evaluating management group: $($mg.Name) ($($mg.DisplayName)) [Level=$($mg.Level)]" -Level INFO -LogFilePath $LogFilePath
+    # Optional: cap management group parallelism to reduce ARM/Graph burst (recommended)
+    $mgThrottle = [Math]::Min($MaxParallel, 6)
 
-        # Pass DisplayName through for better logging + artifact TargetName (function supports -ScopeName)
-        $managementGroupUnknowns += Get-OrphanedAssignments -ScopeType ManagementGroup -ScopeId $mg.Name -ScopeName $mg.DisplayName -LogFilePath $LogFilePath
-    }
+    $managementGroupResults = $managementGroups | ForEach-Object -Parallel {
+        param($using:LogFilePath)
+
+        Import-Module "$using:PSScriptRoot/../Functions/Functions.psm1" -Force
+
+        $mgName        = $_.Name
+        $mgDisplayName = $_.DisplayName
+        $mgLevel       = $_.Level
+
+        if (-not $mgName) {
+            Add-LogEntry -Message "⚠️ Skipping management group — missing Name." -Level WARNING -LogFilePath $using:LogFilePath
+            return
+        }
+
+        $label = if ($mgDisplayName) { "$mgName ($mgDisplayName)" } else { $mgName }
+
+        Add-LogEntry -Message "🚀 Scanning management group: $label [Level=$mgLevel]" -Level INFO -LogFilePath $using:LogFilePath
+
+        # Pass DisplayName through for better logging + artifact TargetName
+        $orphans = Get-OrphanedAssignments -ScopeType ManagementGroup -ScopeId $mgName -ScopeName $mgDisplayName -LogFilePath $using:LogFilePath
+        return $orphans
+
+    } -ThrottleLimit $mgThrottle
+
+    # Flatten parallel results
+    $managementGroupUnknowns = $managementGroupResults | Where-Object { $_ } | ForEach-Object { $_ }
 
     Add-LogEntry -Message "✅ Management group scans complete. Found $($managementGroupUnknowns.Count) orphaned assignments." -Level INFO -LogFilePath $LogFilePath
 }
