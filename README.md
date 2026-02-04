@@ -1,10 +1,10 @@
-# Azure RBAC Orphaned Assignment Cleanup
+# ![Azure RBAC Orphaned Assignment Cleanup](./assets/azure-rbac-banner-1280x640.jpg)
 
 This repository provides an **Azure DevOps pipeline and PowerShell automation** to detect and safely remediate **orphaned Azure RBAC role assignments** across subscriptions and management groups.
 
 An *orphaned* RBAC assignment occurs when a role assignment still exists in Azure Resource Manager (ARM), but the associated **Microsoft Entra ID object** (user, group, service principal, managed identity, etc.) no longer exists.
 
-The solution is designed to align with **Microsoft Cloud Adoption Framework (CAF)** and **Well-Architected Framework** security guidance, and supports principles outlined in the **Australian Cyber Security Centre (ACSC) Essential Eight**, with strong emphasis on governance, least privilege, and operational safety.
+The solution is designed to align with the **Microsoft Cloud Adoption Framework (CAF)** and **Well-Architected Framework** security guidance, and supports principles outlined in the **Australian Cyber Security Centre (ACSC) Essential Eight**, with a strong emphasis on governance, least privilege, and operational safety.
 
 ---
 
@@ -16,9 +16,20 @@ The solution is designed to align with **Microsoft Cloud Adoption Framework (CAF
 - Produces a **reviewable JSON artifact** prior to any remediation
 - Requires **manual approval** before removal actions occur
 - Applies **dual validation safeguards** before deleting any role assignment
-- Prevents deletion of the **last Owner or User Access Administrator** at subscription scope
+- Avoids deletion attempts where Azure enforces guardrails on the **last Owner** or **User Access Administrator** at subscription scope
 - Designed for scheduled, repeatable execution in Azure DevOps
 - Tested on a **vanilla Ubuntu Microsoft-hosted Azure DevOps agent**
+
+### Future Enhancements
+
+Planned or potential enhancements include:
+
+- Optional scanning of **resource group–scoped RBAC assignments**, following the same staged and safeguarded approach used for subscriptions and management groups.
+
+Any expansion of scope will continue to prioritise:
+- explicit validation
+- least privilege
+- manual approval prior to remediation
 
 ---
 
@@ -83,7 +94,7 @@ The Azure DevOps pipeline executes in **two controlled stages**.
 
 A role assignment is removed **only when all of the following conditions are met**:
 
-1. The Entra ID object **does not exist**.
+1. The Microsof Entra ID object **does not exist**.
 2. The RBAC role assignment **still exists in Azure**.
 3. The assignment is **not** the last:
    - Owner, or
@@ -132,6 +143,12 @@ Additional notes:
 
 ---
 
+## Local Development Environment (Dev Container)
+
+For local development using VS Code Dev Containers, see [devcontainer.md](./devcontainer.md).
+
+---
+
 ## Azure DevOps Agent Considerations
 
 - The pipeline is configured and tested for a **standard Ubuntu Microsoft-hosted Azure DevOps agent**.
@@ -155,7 +172,7 @@ This JSON file is the **sole input** to the removal stage and must be reviewed p
 
 ## Known Platform Behaviours
 
-- Azure enforces guardrails preventing deletion of the **last Owner or User Access Administrator** at subscription scope.
+- Azure enforces guardrails preventing deletion of the **last Owner** or **User Access Administrator** at subscription scope.
 - Such assignments are skipped and clearly reported for manual remediation if required.
 
 ---
