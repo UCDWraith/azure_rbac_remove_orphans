@@ -15,14 +15,14 @@ Get-ChildItem -Path $scriptPath -Filter *.ps1 -ErrorAction Stop | ForEach-Object
 # Optionally export functions explicitly
 # (only export those you want visible outside the module)
 $functionsToExport = @(
-    'Connect-AzFederatedIdentity',
-    'Initialize-PSModules',
-    'Export-OrphanedAssignments',
-    'Get-OrphanedAssignments',
-    'Get-ManagementGroupHierarchy',
-    'Test-FederatedIdentityConnection',
-    'Show-Summary',
-    'Add-LogEntry'
+    'Add-LogEntry',
+        'Connect-FederatedIdentity',
+        'Initialize-PSModules',
+        'Export-OrphanedAssignments',
+        'Get-OrphanedAssignments',
+        'Get-ManagementGroupHierarchy',
+        'Test-FederatedIdentityConnection',
+        'Show-Summary'
 )
 
 Export-ModuleMember -Function $functionsToExport
