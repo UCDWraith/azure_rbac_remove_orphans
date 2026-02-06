@@ -8,14 +8,14 @@
     Description       = 'Reusable helper functions for Azure RBAC cleanup automation.'
     PowerShellVersion = '7.2'
     FunctionsToExport = @(
-        'Connect-AzFederatedIdentity',
+        'Add-LogEntry',
+        'Connect-FederatedIdentity',
         'Initialize-PSModules',
         'Export-OrphanedAssignments',
         'Get-OrphanedAssignments',
         'Get-ManagementGroupHierarchy',
         'Test-FederatedIdentityConnection',
-        'Show-Summary',
-        'Add-LogEntry'
+        'Show-Summary'
     )
     CmdletsToExport   = @()
     AliasesToExport   = @()
